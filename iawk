@@ -1,0 +1,33 @@
+#!/bin/sh
+#处理k=v`k1=v1,的特定awk
+
+version=0.0.1
+tmp_file=/tmp/.tmp.uawk
+awk_bin=gawk
+
+if [ -f ~/.bash_profile ]; then
+    source ~/.bash_profile
+fi
+
+if [ $# -lt 1 ]; then
+    echo "usage: uawk <key> <file name>"
+    echo "version: $version"
+    echo ""
+    exit 0
+fi
+
+string=$1
+file_name=$2
+
+echo "{ delete uList; for(i=1;i<=NF;i++){ pos=index(\$i, \"=\"); _key=substr(\$i, 0, pos-1); _value=substr(\$i, pos+1); uList[_key] = _value; } $string; } " > $tmp_file
+
+if [ ! -f $tmp_file ]; then
+    echo "write tmp file error, please check file access: $tmp_file"
+    exit 0
+fi
+
+if [ -z "$file_name" ]; then
+    cat /dev/stdin | $awk_bin -F '`' -f $tmp_file 
+else
+    $awk_bin -F '`' -f $tmp_file $file_name
+fi
